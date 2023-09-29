@@ -1,8 +1,8 @@
 {
-  "name": "sprint_13",
+  "name": "express-mesto-gha",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "lint": "npx eslint .",
     "start": "node app.js",
