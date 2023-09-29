@@ -46,11 +46,12 @@ module.exports.updateUser = (req, res) => {
     },
     {
       new: true,
+      runValidators: true,
+      upsert: false,
     },
   )
     .then((user) => {
       if (user) return res.send({ data: user });
-
       return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
     })
     .catch((err) => {
@@ -76,6 +77,8 @@ module.exports.updateAvatar = (req, res) => {
     },
     {
       new: true,
+      runValidators: true,
+      upsert: false,
     },
   )
     .then((user) => {
