@@ -15,12 +15,14 @@ module.exports.createCard = (req, res) => {
   const {
     name, link,
   } = req.body;
+  const { _id: userId } = req.user;
   Card.create({
-    name, link,
+    name, link, owner: userId,
   })
+    .then((card) => res.send({ data: card }))
     .catch((err) => (
       err.name === 'ValidationError'
-        ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при создании карточки' })
+        ? res.status(ERROR_INACCURATE_DATA).send(console.log(err.message))
         : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
     ));
 };
@@ -29,7 +31,6 @@ module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.id)
     .then((card) => {
       if (card) return res.send({ data: card });
-
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
     .catch((err) => (
@@ -40,11 +41,12 @@ module.exports.deleteCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
+  const { cardId } = req.params;
   const { _id: userId } = req.user;
   Card.findByIdAndUpdate(
-    req.params.cardId,
+    cardId,
     { $addToSet: { likes: userId } },
-    { new: true },
+    { new: true, upsert: false },
   )
     .then((card) => {
       if (card) return res.send({ data: card });
@@ -58,11 +60,12 @@ module.exports.likeCard = (req, res) => {
     });
 };
 module.exports.dislikeCard = (req, res) => {
+  const { cardId } = req.params;
   const { _id: userId } = req.user;
   Card.findByIdAndUpdate(
-    req.params.cardId,
+    cardId,
     { $pull: { likes: userId } },
-    { new: true },
+    { new: true, upsert: false },
   )
     .then((card) => {
       if (card) return res.send({ data: card });
