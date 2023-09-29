@@ -38,9 +38,9 @@ module.exports.createUser = (req, res) => {
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
-  const { _id } = req.user._id;
+  const { _id: userId } = req.user;
   User.findByIdAndUpdate(
-    _id,
+    userId,
     {
       name, about,
     },
@@ -68,9 +68,9 @@ module.exports.updateUser = (req, res) => {
 
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  const { _id } = req.user._id;
+  const { _id: userId } = req.user;
   User.findByIdAndUpdate(
-    _id,
+    userId,
     {
       avatar,
     },
