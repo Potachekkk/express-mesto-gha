@@ -3,7 +3,7 @@ const {
   ERROR_INACCURATE_DATA,
   ERROR_NOT_FOUND,
   ERROR_INTERNAL_SERVER,
-} = require('../errors/errors')
+} = require('../errors/errors');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -15,11 +15,11 @@ module.exports.getUserById = (req, res) => {
   const { id } = req.params;
   User.findById(id)
     .then((user) => {
-      if (user) return res.send({ data: user })
+      if (user) return res.send({ data: user });
       return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
     })
     .catch((err) => (
-      err.name === 'InError'
+      err.name === 'CastError'
         ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Передан некорректный id' })
         : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
     ));
@@ -30,11 +30,11 @@ module.exports.createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
     .catch((err) => (
-      err.name === 'InError'
+      err.name === 'ValidationError'
         ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при создании пользователя' })
         : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
     ));
-}
+};
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
@@ -54,11 +54,11 @@ module.exports.updateUser = (req, res) => {
       return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
     })
     .catch((err) => {
-      if (err.name === 'ValError') {
+      if (err.name === 'ValidationError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении профиля' });
       }
 
-      if (err.name === 'InError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь с указанным id не найден' });
       }
 
@@ -84,11 +84,11 @@ module.exports.updateAvatar = (req, res) => {
       return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
     })
     .catch((err) => {
-      if (err.name === 'ValError') {
+      if (err.name === 'ValidationError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении аватара' });
       }
 
-      if (err.name === 'InError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь с указанным id не найден' });
       }
 
