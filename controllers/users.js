@@ -34,7 +34,7 @@ module.exports.createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.status(SUCCESSFULY_CREATED).send({ data: user }))
     .catch((err) => (
-      err.name === 'CastError'
+      err.name === 'ValidationError'
         ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при создании пользователя' })
         : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
     ));
@@ -61,7 +61,7 @@ module.exports.updateUser = (req, res) => {
     .catch((err) => {
       if (err.message === 'NotFound') {
         res.status(ERROR_NOT_FOUND).send({ message: 'Передан некорректный id' });
-      } else if (err.name === 'CastError') {
+      } else if (err.name === 'ValidationError') {
         res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении информации о пользователе' });
       } else {
         res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
