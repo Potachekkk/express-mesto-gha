@@ -22,7 +22,9 @@ module.exports.getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(ERROR_INACCURATE_DATA).send({ message: 'Передан некорректный id' });
+        res.status(ERROR_NOT_FOUND).send({ message: 'Передан некорректный id' });
+      } else if (err.name === 'CastError') {
+        res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные о пользователе' });
       } else {
         res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
       }
