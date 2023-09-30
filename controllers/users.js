@@ -3,7 +3,9 @@ const {
   ERROR_INACCURATE_DATA,
   ERROR_NOT_FOUND,
   ERROR_INTERNAL_SERVER,
-} = require('../errors/errors');
+  SUCCESSFULY_CREATED,
+  OK_SUCCESS,
+} = require('../responds/status');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -14,23 +16,25 @@ module.exports.getUsers = (req, res) => {
 module.exports.getUserById = (req, res) => {
   const { id } = req.params;
   User.findById(id)
+    .orFail(new Error('NotFound'))
     .then((user) => {
-      if (user) return res.send({ data: user });
-      return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
+      res.status(OK_SUCCESS).send({ data: user });
     })
-    .catch((err) => (
-      err.name === 'CastError'
-        ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Передан некорректный id' })
-        : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
-    ));
+    .catch((err) => {
+      if (err.message === 'NotFound') {
+        res.status(ERROR_INACCURATE_DATA).send({ message: 'Передан некорректный id' });
+      } else {
+        res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
+      }
+    });
 };
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(SUCCESSFULY_CREATED).send({ data: user }))
     .catch((err) => (
-      err.name === 'ValidationError'
+      err.name === 'CastError'
         ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при создании пользователя' })
         : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
     ));
@@ -50,20 +54,18 @@ module.exports.updateUser = (req, res) => {
       upsert: false,
     },
   )
+    .orFail(new Error('NotFound'))
     .then((user) => {
-      if (user) return res.send({ data: user });
-      return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
+      res.status(OK_SUCCESS).send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+      if (err.message === 'NotFound') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Передан некорректный id' });
+      } else if (err.name === 'CastError') {
+        res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении информации о пользователе' });
+      } else {
+        res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
       }
-
-      if (err.name === 'CastError') {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь с указанным id не найден' });
-      }
-
-      return res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -81,20 +83,17 @@ module.exports.updateAvatar = (req, res) => {
       upsert: false,
     },
   )
+    .orFail(new Error('NotFound'))
     .then((user) => {
-      if (user) return res.send({ data: user });
-
-      return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
+      res.status(OK_SUCCESS).send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+      if (err.message === 'NotFound') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Передан некорректный id' });
+      } else if (err.name === 'ValidationError') {
+        res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+      } else {
+        res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
       }
-
-      if (err.name === 'CastError') {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь с указанным id не найден' });
-      }
-
-      return res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
     });
 };

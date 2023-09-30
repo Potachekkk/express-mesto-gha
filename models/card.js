@@ -6,7 +6,7 @@ const cardSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, 'Поле "name" должно быть заполнено'],
       validate: {
         validator: ({ length }) => length >= 2 && length <= 30,
         message: 'Имя карточки должно быть длиной от 2 до 30 символов',
@@ -14,12 +14,12 @@ const cardSchema = new mongoose.Schema(
     },
     link: {
       type: String,
-      required: true,
+      required: [true, 'Поле "link" должно быть заполнено'],
     },
     owner: {
       type: ObjectId,
       ref: 'user',
-      required: true,
+      required: [true, 'Поле "owner" должно быть заполнено'],
     },
     likes: [{
       type: ObjectId,
