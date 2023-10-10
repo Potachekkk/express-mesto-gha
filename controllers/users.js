@@ -136,13 +136,20 @@ module.exports.login = (req, res) => {
         .send({ message: err.message });
     });
 };
-module.exports.currentUser = (req, res, next) => {
-  const { userId } = req.user;
+module.exports.currentUser = (req, res) => {
+  const { _id: userId } = req.user;
   User.findById(userId)
+    .orFail(new Error('NotFound'))
     .then((user) => {
-      if (user) return res.status(OK_SUCCESS).send({ user });
-
-      throw new ERROR_NOT_FOUND('Данные по указанному id не найдены');
+      res.status(OK_SUCCESS).send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.message === 'NotFound') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Передан некорректный id' });
+      } else if (err.name === 'CastError') {
+        res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некоaрректные данные о пользователе' });
+      } else {
+        res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
+      }
+    });
 };
