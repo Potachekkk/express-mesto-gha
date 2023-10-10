@@ -136,3 +136,13 @@ module.exports.login = (req, res) => {
         .send({ message: err.message });
     });
 };
+module.exports.currentUser = (req, res, next) => {
+  const { userId } = req.user;
+  User.findById(userId)
+    .then((user) => {
+      if (user) return res.status(OK_SUCCESS).send({ user });
+
+      throw new ERROR_NOT_FOUND('Данные по указанному id не найдены');
+    })
+    .catch(next);
+};

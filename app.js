@@ -29,8 +29,8 @@ app.use((req, res, next) => {
 
 app.use('/users', UsersRoute);
 app.use('/cards', CardsRoute);
-app.post('/signin', login);
-app.post('/signup', createUser);
+// app.post('/signin', login);
+// app.post('/signup', createUser);
 
 app.use((req, res, next) => {
   next(res.status(ERROR_NOT_FOUND).send({ message: 'Страницы по запрошенному URL не существует' }));
