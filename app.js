@@ -5,7 +5,8 @@ const helmet = require('helmet');
 const { errors } = require('celebrate');
 const NotFoundError = require('./errors/not-found-err');
 
-const { createUser, login } = require('./controllers/users');
+const routeSignup = require('./routes/signup');
+const routeSignin = require('./routes/signin');
 
 const UsersRoute = require('./routes/user');
 const CardsRoute = require('./routes/card');
@@ -30,8 +31,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/signup', createUser);
-app.post('/signin', login);
+app.post('/', routeSignup);
+app.post('/', routeSignin);
 app.use(auth);
 
 app.use('/users', UsersRoute);

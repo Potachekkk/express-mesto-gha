@@ -56,9 +56,8 @@ const userSchema = new mongoose.Schema(
             }
             return bcrypt.compare(password, user.password)
               .then((matched) => {
-                if (!matched) {
-                  return Promise.reject(new Error('Неправильные почта или пароль'));
-                }
+                if (matched) return user;
+                return Promise.reject();
               });
           });
       },
