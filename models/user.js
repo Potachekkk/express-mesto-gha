@@ -4,6 +4,21 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
+    email: {
+      type: String,
+      required: [true, 'Поле "email" должно быть заполнено'],
+      unique: true,
+      validate: {
+        validator: (v) => validator.isEmail(v),
+        message: 'Некорректный Email',
+      },
+    },
+    password: {
+      type: String,
+      required: [true, 'Поле "password" должно быть заполнено'],
+      select: false,
+      minlength: 8,
+    },
     name: {
       type: String,
       default: 'Жак-Ив Кусто',
@@ -28,37 +43,23 @@ const userSchema = new mongoose.Schema(
         message: 'Некорректный URL',
       },
     },
-    email: {
-      type: String,
-      required: [true, 'Поле "email" должно быть заполнено'],
-      unique: true,
-      validate: {
-        validator: (v) => validator.isEmail(v),
-        message: 'Некорректный Email',
-      },
-    },
-    password: {
-      type: String,
-      required: [true, 'Поле "password" должно быть заполнено'],
-      select: false,
-      minlength: 8,
-    },
   },
   {
     versionKey: false,
     statics: {
       findUserByCredentials(email, password) {
-        return this.findOne({ email })
+        return this
+          .findOne({ email })
           .select('+password')
           .then((user) => {
-            if (!user) {
-              return Promise.reject(new Error('Неправильные почта или пароль'));
+            if (user) {
+              return bcrypt.compare(password, user.password)
+                .then((matched) => {
+                  if (matched) return user;
+                  return Promise.reject();
+                });
             }
-            return bcrypt.compare(password, user.password)
-              .then((matched) => {
-                if (matched) return user;
-                return Promise.reject();
-              });
+            return Promise.reject();
           });
       },
     },

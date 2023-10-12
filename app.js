@@ -3,62 +3,49 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const { errors } = require('celebrate');
-const NotFoundError = require('./errors/not-found-err');
-
-const routeSignup = require('./routes/signup');
-const routeSignin = require('./routes/signin');
-
-const UsersRoute = require('./routes/user');
-const CardsRoute = require('./routes/card');
+const NotFound = require('./errors/notFound');
+const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const { PORT, MONGO_URL, INTERNAL_SERVER_STATUS } = require('./config/config');
 
-const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
+const { userRouter, cardRouter } = require('./routes');
+
 const app = express();
+
+app.use(express.json());
+app.use(helmet());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(helmet());
 
-mongoose.connect(DB_URL, {
-  useNewUrlParser: true,
+mongoose.connect(MONGO_URL);
+
+app.post('/signin', login);
+app.post('/signup', createUser);
+
+// app.use(auth);
+
+app.use(userRouter);
+app.use(cardRouter);
+app.use('*', (req, res, next) => {
+  next(new NotFound('Такой страницы не существует'));
 });
-
-app.use((req, res, next) => {
-  req.user = {
-    _id: '6515c29c125999429b620843',
-  };
-
-  next();
-});
-
-app.post('/', routeSignup);
-app.post('/', routeSignin);
-app.use(auth);
-
-app.use('/users', UsersRoute);
-app.use('/cards', CardsRoute);
-
-app.use((req, res, next) => next(new NotFoundError('Страницы по запрошенному URL не существует')));
 
 app.use(errors());
 
-app.use((err, _, res, next) => {
-  if (err.name === 'CastError' || err.name === 'ValidationError') {
-    const { statusCode = 400 } = err;
+app.use((err, req, res, next) => { // централизованный обработчик
+  // если у ошибки нет статуса, выставляем 500
+  const { statusCode = INTERNAL_SERVER_STATUS, message } = err;
+  res
+    .status(statusCode)
+    // проверяем статус и выставляем сообщение в зависимости от него
+    .send({
+      message: statusCode === INTERNAL_SERVER_STATUS
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
 
-    return res.status(statusCode).send({ message: 'Переданы некорректные данные' });
-  }
-
-  if (err.name === 'Error') return res.status(err.statusCode).send({ message: err.message });
-
-  if (err.code === 11000) {
-    const { statusCode = 409 } = err;
-
-    return res.status(statusCode).send({ message: 'Пользователь с таким электронным адресом уже зарегистрирован' });
-  }
-
-  const { statusCode = 500 } = err;
-  return next(res.status(statusCode).send({ message: 'На сервере произошла ошибка' }));
+  next();
 });
 
 app.listen(PORT);

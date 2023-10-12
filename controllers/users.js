@@ -1,10 +1,17 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const mongoose = require('mongoose');
 const User = require('../models/user');
 
-const NotFoundError = require('../errors/not-found-err');
-const UnauthorizedError = require('../errors/unauthorized-err');
+const NotFound = require('../errors/notFound');
+const BadRequest = require('../errors/badRequest');
+const ConflictError = require('../errors/conflict');
+const {
+  OK_STATUS,
+  OK_CREATED_STATUS,
+  SALT_ROUND,
+  SECRET_KEY,
+} = require('../config/config');
 
 module.exports.getUsers = (_, res, next) => {
   User.find({})
@@ -18,35 +25,48 @@ module.exports.getUserById = (req, res, next) => {
     .findById(id)
     .then((user) => {
       if (user) return res.status(200).send({ user });
-      throw new NotFoundError('Данные по указанному id не найдены');
+      throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
 };
 
 module.exports.createUser = (req, res, next) => {
-  bcrypt.hash(req.body.password, 10);
   const {
-    name, about, avatar, email, password,
+    name,
+    about,
+    avatar,
+    email,
+    password,
   } = req.body;
-  bcrypt.hash(password, 10)
+
+  bcrypt.hash(password, SALT_ROUND)
     .then((hash) => User.create({
-      email,
-      password: hash,
       name,
       about,
       avatar,
+      email,
+      password: hash,
     }))
-    .then((user) => {
-      const { _id } = user;
-      return res.status(201).send({
-        email,
-        name,
-        about,
-        avatar,
-        _id,
+    .then(() => {
+      res.status(OK_CREATED_STATUS).send({
+        data: {
+          name, about, avatar, email,
+        },
       });
     })
-    .catch(next);
+    .catch((e) => {
+      if (e.code === 11000) {
+        next(new ConflictError('Этот email уже зарегистрирован'));
+      } else if (e instanceof mongoose.Error.ValidationError) {
+        const message = Object.values(e.errors)
+          .map((error) => error.message)
+          .join('; ');
+
+        next(new BadRequest(message));
+      } else {
+        next(e);
+      }
+    });
 };
 
 module.exports.updateUser = (req, res, next) => {
@@ -65,7 +85,7 @@ module.exports.updateUser = (req, res, next) => {
   )
     .then((user) => {
       if (user) return res.status(200).send({ user });
-      throw new NotFoundError('Данные по указанному id не найдены');
+      throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
 };
@@ -86,36 +106,32 @@ module.exports.updateAvatar = (req, res, next) => {
   )
     .then((user) => {
       if (user) return res.status(200).send({ user });
-      throw new NotFoundError('Данные по указанному id не найдены');
+      throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
 };
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  const secretKey = '1d0fd800742097b7b0c31828eeda8419aae09a543f9ef131f5e96acf4e536524';
 
-  User.findUserByCredentials(email, password)
-    .then(({ _id: userId }) => {
-      if (userId) {
-        const token = jwt.sign(
-          { userId },
-          secretKey,
-          { expiresIn: '7d' },
-        );
-        return res.status(200).send({ _id: token });
-      }
-      throw new UnauthorizedError('Неправильные почта или пароль');
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      // создадим токен
+      const token = jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' });
+      // аутентификация успешна
+      res.status(OK_STATUS).send({ token });
     })
     .catch(next);
 };
 
 module.exports.currentUser = (req, res, next) => {
-  const { _id: userId } = req.user;
+  const userId = req.user._id;
   User.findById(userId)
+    .orFail(() => {
+      throw new NotFound('Пользователь с таким id не найден');
+    })
     .then((user) => {
-      if (user) return res.status(200).send({ user });
-      throw new NotFoundError('Данные по указанному id не найдены');
+      res.status(OK_STATUS).send({ data: user });
     })
     .catch(next);
 };

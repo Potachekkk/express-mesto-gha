@@ -1,5 +1,4 @@
-const router = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
+const userRouter = require('express').Router();
 
 const {
   getUsers,
@@ -9,26 +8,11 @@ const {
   currentUser,
 } = require('../controllers/users');
 
-router.get('/', getUsers);
-router.get('/me', currentUser);
-router.get('/:id', celebrate({
-  params: Joi.object().keys({
-    id: Joi.string().min(24).max(24),
-  }),
-}), getUserById);
+userRouter.get('/users', getUsers);
+userRouter.get('/users/me', currentUser);
+userRouter.get('/users/:userId', getUserById);
 
-router.patch('/me', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-  }),
-}), updateUser);
-router.patch('/me/avatar', celebrate({
-  body: Joi.object().keys({
-    avatar: Joi
-      .string()
-      .pattern(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/),
-  }),
-}), updateAvatar);
+userRouter.patch('/users/me', updateUser);
+userRouter.patch('/users/me/avatar', updateAvatar);
 
-module.exports = router;
+module.exports = userRouter;
