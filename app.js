@@ -2,13 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
+const { errors } = require('celebrate');
+const NotFoundError = require('./errors/not-found-err');
 
 const { createUser, login } = require('./controllers/users');
 
 const UsersRoute = require('./routes/user');
 const CardsRoute = require('./routes/card');
 const auth = require('./middlewares/auth');
-const { ERROR_NOT_FOUND } = require('./responds/status');
 
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 const app = express();
@@ -36,8 +37,27 @@ app.use(auth);
 app.use('/users', UsersRoute);
 app.use('/cards', CardsRoute);
 
-app.use((req, res, next) => {
-  next(res.status(ERROR_NOT_FOUND).send({ message: 'Страницы по запрошенному URL не существует' }));
+app.use((req, res, next) => next(new NotFoundError('Страницы по запрошенному URL не существует')));
+
+app.use(errors());
+
+app.use((err, _, res, next) => {
+  if (err.name === 'CastError' || err.name === 'ValidationError') {
+    const { statusCode = 400 } = err;
+
+    return res.status(statusCode).send({ message: 'Переданы некорректные данные' });
+  }
+
+  if (err.name === 'Error') return res.status(err.statusCode).send({ message: err.message });
+
+  if (err.code === 11000) {
+    const { statusCode = 409 } = err;
+
+    return res.status(statusCode).send({ message: 'Пользователь с таким электронным адресом уже зарегистрирован' });
+  }
+
+  const { statusCode = 500 } = err;
+  return next(res.status(statusCode).send({ message: 'На сервере произошла ошибка' }));
 });
 
 app.listen(PORT);
