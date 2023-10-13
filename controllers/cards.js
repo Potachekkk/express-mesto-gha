@@ -56,7 +56,7 @@ module.exports.deleteCard = (req, res, next) => {
     });
 };
 
-module.exports.likeCard = (req, res, next) => {
+const updateCard = (req, res, next) => {
   Card
     .findByIdAndUpdate(
       req.params.cardId,
@@ -77,24 +77,34 @@ module.exports.likeCard = (req, res, next) => {
       }
     });
 };
+// module.exports.dislikeCard = (req, res, next) => {
+//   Card
+//     .findByIdAndUpdate(
+//       req.params.cardId,
+//       { $pull: { likes: req.user._id } },
+//       {
+//         new: true,
+//       },
+//     )
+//     .then((card) => {
+//       if (card) return res.status(OK_STATUS).send({ data: card });
+//       throw new NotFound('Данные по указанному id не найдены');
+//     })
+//     .catch((e) => {
+//       if (e instanceof mongoose.Error.CastError) {
+//         next(new BadRequest('Переданы некорректные данные о карточке'));
+//       } else {
+//         next(e);
+//       }
+//     });
+// };
+
+module.exports.likeCard = (req, res, next) => {
+  const addLike = { $addToSet: { likes: req.user._id } };
+  return updateCard(req, res, next, { addLike });
+};
+
 module.exports.dislikeCard = (req, res, next) => {
-  Card
-    .findByIdAndUpdate(
-      req.params.cardId,
-      { $pull: { likes: req.user._id } },
-      {
-        new: true,
-      },
-    )
-    .then((card) => {
-      if (card) return res.status(OK_STATUS).send({ data: card });
-      throw new NotFound('Данные по указанному id не найдены');
-    })
-    .catch((e) => {
-      if (e instanceof mongoose.Error.CastError) {
-        next(new BadRequest('Переданы некорректные данные о карточке'));
-      } else {
-        next(e);
-      }
-    });
+  const removeLike = { $pull: { likes: req.user._id } };
+  return updateCard(req, res, next, { removeLike });
 };
