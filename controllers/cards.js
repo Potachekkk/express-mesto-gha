@@ -1,7 +1,9 @@
+const mongoose = require('mongoose');
 const Card = require('../models/card');
-
-const NotFoundError = require('../errors/notFound');
+const NotFound = require('../errors/notFound');
 const NotOwner = require('../errors/notOwner');
+const BadRequest = require('../errors/badRequest');
+
 const { OK_STATUS, OK_CREATED_STATUS } = require('../config/config');
 
 module.exports.getCards = (_, res, next) => {
@@ -23,17 +25,29 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
   const ownerId = req.user._id;
-  Card
-    .findById(cardId)
+  Card.findById(cardId)
+    .orFail(() => {
+      throw new NotFound('Карточка не найдена');
+    })
     .populate(['owner', 'likes'])
     .then((card) => {
-      if (!card) throw new NotFoundError('Данные по указанному id не найдены');
-      if (!card.owner.equals(ownerId)) throw new NotOwner('Нет прав доступа');
-      card
-        .remove()
-        .then(() => res.status(OK_STATUS).send({ data: card }));
+      if (!card.owner.equals(ownerId)) {
+        throw new NotOwner('Невозможно удалить чужую карточку');
+      } else {
+        Card.deleteOne(card)
+          .then(() => {
+            res.status(OK_STATUS).send({ data: card });
+          })
+          .catch(next);
+      }
     })
-    .catch(next);
+    .catch((e) => {
+      if (e instanceof mongoose.Error.CastError) {
+        next(new BadRequest('Переданы некорректные данные о карточке'));
+      } else {
+        next(e);
+      }
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -47,7 +61,7 @@ module.exports.likeCard = (req, res, next) => {
     )
     .then((card) => {
       if (card) return res.status(OK_STATUS).send({ data: card });
-      throw new NotFoundError('Данные по указанному id не найдены');
+      throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
 };
@@ -62,7 +76,7 @@ module.exports.dislikeCard = (req, res, next) => {
     )
     .then((card) => {
       if (card) return res.status(OK_STATUS).send({ data: card });
-      throw new NotFoundError('Данные по указанному id не найдены');
+      throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
 };
