@@ -3,7 +3,7 @@ const AuthErr = require('../errors/authError');
 const { SECRET_KEY } = require('../config/config');
 
 // eslint-disable-next-line consistent-return
-module.exports = (req, res, next) => {
+module.exports.auth = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {

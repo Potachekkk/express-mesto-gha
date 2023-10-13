@@ -4,8 +4,8 @@ const { validateGetUserById, validateUpdateUser, validateUpdateAvatar } = requir
 const {
   getUsers,
   getUserById,
-  updateUser,
-  updateAvatar,
+  updateUserInfo,
+  updateUserAvatar,
   currentUser,
 } = require('../controllers/users');
 
@@ -13,7 +13,7 @@ userRouter.get('/', getUsers);
 userRouter.get('me', currentUser);
 userRouter.get('/:userId', validateGetUserById, getUserById);
 
-userRouter.patch('/me', validateUpdateUser, updateUser);
-userRouter.patch('/me/avatar', validateUpdateAvatar, updateAvatar);
+userRouter.patch('/me', validateUpdateUser, updateUserInfo);
+userRouter.patch('/me/avatar', validateUpdateAvatar, updateUserAvatar);
 
-module.exports = userRouter;
+module.exports = { userRouter };

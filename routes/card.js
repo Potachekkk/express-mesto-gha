@@ -15,4 +15,4 @@ cardRouter.delete('/:cardId', validateUpdateCard, deleteCard);
 cardRouter.put('/:cardId/likes', validateUpdateCard, likeCard);
 cardRouter.delete('/:cardId/likes', validateUpdateCard, dislikeCard);
 
-module.exports = cardRouter;
+module.exports = { cardRouter };
