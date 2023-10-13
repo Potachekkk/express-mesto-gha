@@ -18,23 +18,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Поле "password" должно быть заполнено'],
       select: false,
-      minlength: 8,
     },
     name: {
       type: String,
       default: 'Жак-Ив Кусто',
-      validate: {
-        validator: ({ length }) => length >= 2 && length <= 30,
-        message: 'Имя пользователя должно быть длиной от 2 до 30 символов',
-      },
+      minlength: [2, 'Имя не может быть короче 2 символов'],
+      maxlength: [30, 'Имя не может быть длиннее 30 символов'],
     },
     about: {
       type: String,
       default: 'Исследователь',
-      validate: {
-        validator: ({ length }) => length >= 2 && length <= 30,
-        message: 'Информация о пользователе должна быть длиной от 2 до 30 символов',
-      },
+      minlength: [2, 'Информация о себе не может быть короче 2 символов'],
+      maxlength: [30, 'Информация о себе не может быть длиннее 30 символов'],
     },
     avatar: {
       type: String,

@@ -9,11 +9,11 @@ const {
   currentUser,
 } = require('../controllers/users');
 
-userRouter.get('/users', getUsers);
-userRouter.get('/users/me', currentUser);
-userRouter.get('/users/:userId', validateGetUserById, getUserById);
+userRouter.get('/', getUsers);
+userRouter.get('me', currentUser);
+userRouter.get('/:userId', validateGetUserById, getUserById);
 
-userRouter.patch('/users/me', validateUpdateUser, updateUser);
-userRouter.patch('/users/me/avatar', validateUpdateAvatar, updateAvatar);
+userRouter.patch('/me', validateUpdateUser, updateUser);
+userRouter.patch('/me/avatar', validateUpdateAvatar, updateAvatar);
 
 module.exports = userRouter;

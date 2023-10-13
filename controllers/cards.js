@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Card = require('../models/card');
 const NotFound = require('../errors/notFound');
 const NotOwner = require('../errors/notOwner');
@@ -18,11 +19,11 @@ module.exports.createCard = (req, res, next) => {
   Card
     .create({ name, link, owner: req.user._id })
     .then((card) => res.status(OK_CREATED_STATUS).send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
+    .catch((e) => {
+      if (e instanceof mongoose.Error.ValidationError) {
         next(new BadRequest('Переданы некорректные данные при создании карточки'));
       } else {
-        next(err);
+        next(e);
       }
     });
 };
@@ -46,11 +47,11 @@ module.exports.deleteCard = (req, res, next) => {
           .catch(next);
       }
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
+    .catch((e) => {
+      if (e instanceof mongoose.Error.CastError) {
         next(new BadRequest('Переданы некорректные данные о карточке'));
       } else {
-        next(err);
+        next(e);
       }
     });
 };
@@ -68,11 +69,11 @@ module.exports.likeCard = (req, res, next) => {
       if (card) return res.status(OK_STATUS).send({ data: card });
       throw new NotFound('Данные по указанному id не найдены');
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequest('Переданы некорректные данные при добавлении лайка карточке'));
+    .catch((e) => {
+      if (e instanceof mongoose.Error.CastError) {
+        next(new BadRequest('Переданы некорректные данные о карточке'));
       } else {
-        next(err);
+        next(e);
       }
     });
 };
@@ -89,11 +90,11 @@ module.exports.dislikeCard = (req, res, next) => {
       if (card) return res.status(OK_STATUS).send({ data: card });
       throw new NotFound('Данные по указанному id не найдены');
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequest('Переданы некорректные данные при снятии лайка карточки'));
+    .catch((e) => {
+      if (e instanceof mongoose.Error.CastError) {
+        next(new BadRequest('Переданы некорректные данные о карточке'));
       } else {
-        next(err);
+        next(e);
       }
     });
 };
