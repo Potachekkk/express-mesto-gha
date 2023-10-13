@@ -20,9 +20,9 @@ module.exports.getUsers = (_, res, next) => {
 };
 
 module.exports.getUserById = (req, res, next) => {
-  const { id } = req.params;
+  const { userId } = req.params;
   User
-    .findById(id)
+    .findById(userId)
     .then((user) => {
       if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');

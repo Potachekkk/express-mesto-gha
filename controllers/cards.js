@@ -1,7 +1,7 @@
 const Card = require('../models/card');
 
 const NotFoundError = require('../errors/notFound');
-const ForbiddenError = require('../errors/notOwner');
+const NotOwner = require('../errors/notOwner');
 const { OK_STATUS, OK_CREATED_STATUS } = require('../config/config');
 
 module.exports.getCards = (_, res, next) => {
@@ -21,16 +21,14 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  const { id: cardId } = req.params;
-  const { userId } = req.user;
+  const { cardId } = req.params;
+  const ownerId = req.user._id;
   Card
-    .findById({
-      _id: cardId,
-    })
+    .findById(cardId)
+    .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) throw new NotFoundError('Данные по указанному id не найдены');
-      const { owner: cardOwnerId } = card;
-      if (cardOwnerId.valueOf() !== userId) throw new ForbiddenError('Нет прав доступа');
+      if (!card.owner.equals(ownerId)) throw new NotOwner('Нет прав доступа');
       card
         .remove()
         .then(() => res.status(OK_STATUS).send({ data: card }));
