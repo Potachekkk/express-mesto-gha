@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { REG_URL } = require('../config/config');
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -15,6 +16,12 @@ const cardSchema = new mongoose.Schema(
     link: {
       type: String,
       required: [true, 'Поле "link" должно быть заполнено'],
+      validate: {
+        validator(url) {
+          return REG_URL.test(url);
+        },
+        message: 'Неверно указан URL изображения',
+      },
     },
     owner: {
       type: ObjectId,

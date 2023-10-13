@@ -15,7 +15,7 @@ const {
 
 module.exports.getUsers = (_, res, next) => {
   User.find({})
-    .then((users) => res.status(200).send({ data: users }))
+    .then((users) => res.status(OK_STATUS).send({ data: users }))
     .catch(next);
 };
 
@@ -24,7 +24,7 @@ module.exports.getUserById = (req, res, next) => {
   User
     .findById(id)
     .then((user) => {
-      if (user) return res.status(200).send({ user });
+      if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
@@ -84,7 +84,7 @@ module.exports.updateUser = (req, res, next) => {
     },
   )
     .then((user) => {
-      if (user) return res.status(200).send({ user });
+      if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
@@ -105,7 +105,7 @@ module.exports.updateAvatar = (req, res, next) => {
     },
   )
     .then((user) => {
-      if (user) return res.status(200).send({ user });
+      if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');
     })
     .catch(next);
