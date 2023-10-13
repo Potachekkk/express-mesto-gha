@@ -1,6 +1,5 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
 const User = require('../models/user');
 
 const NotFound = require('../errors/notFound');
@@ -27,7 +26,13 @@ module.exports.getUserById = (req, res, next) => {
       if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequest('Передан некорректный id'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -54,17 +59,13 @@ module.exports.createUser = (req, res, next) => {
         },
       });
     })
-    .catch((e) => {
-      if (e.code === 11000) {
-        next(new ConflictError('Этот email уже зарегистрирован'));
-      } else if (e instanceof mongoose.Error.ValidationError) {
-        const message = Object.values(e.errors)
-          .map((error) => error.message)
-          .join('; ');
-
-        next(new BadRequest(message));
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким электронным адресом уже зарегистрирован'));
+      } else if (err.name === 'ValidationError') {
+        next(new BadRequest('Переданы некорректные данные при регистрации пользователя'));
       } else {
-        next(e);
+        next(err);
       }
     });
 };
@@ -87,7 +88,13 @@ module.exports.updateUser = (req, res, next) => {
       if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        next(new BadRequest('Переданы некорректные данные при обновлении профиля пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.updateAvatar = (req, res, next) => {
@@ -108,7 +115,13 @@ module.exports.updateAvatar = (req, res, next) => {
       if (user) return res.status(OK_STATUS).send({ user });
       throw new NotFound('Данные по указанному id не найдены');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        next(new BadRequest('Переданы некорректные данные при обновлении профиля пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.login = (req, res, next) => {
@@ -131,5 +144,11 @@ module.exports.currentUser = (req, res, next) => {
     .then((user) => {
       res.status(OK_STATUS).send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequest('Передан некорректный id'));
+      } else {
+        next(err);
+      }
+    });
 };
