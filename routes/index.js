@@ -10,8 +10,8 @@ const routes = express.Router();
 
 routes.all('*', express.json());
 
-routes.post('./signin', validateLogin, login);
-routes.post('./signup', validateCreateUser, createUser);
+routes.post('/signin', validateLogin, login);
+routes.post('/signup', validateCreateUser, createUser);
 
 routes.use('/users', auth, userRouter);
 routes.use('/cards', auth, cardRouter);
