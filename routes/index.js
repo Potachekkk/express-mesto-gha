@@ -2,7 +2,7 @@ const express = require('express');
 const { userRouter } = require('./user');
 const { cardRouter } = require('./card');
 const { auth } = require('../middlewares/auth');
-const { NotFound } = require('../errors/notFound');
+const NotFound = require('../errors/notFound');
 const { createUser, login } = require('../controllers/users');
 const { validateLogin, validateCreateUser } = require('../middlewares/validation');
 
