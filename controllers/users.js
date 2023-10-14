@@ -71,14 +71,10 @@ module.exports.createUser = (req, res, next) => {
     });
 };
 
-const updateUser = (req, res, next) => {
-  const { name, about } = req.body;
-  const { _id: userId } = req.user;
+const updateUser = (req, res, next, newData) => {
   User.findByIdAndUpdate(
-    userId,
-    {
-      name, about,
-    },
+    req.user._id,
+    newData,
     {
       new: true,
       runValidators: true,
@@ -92,28 +88,6 @@ const updateUser = (req, res, next) => {
     })
     .catch(next);
 };
-
-// module.exports.updateAvatar = (req, res, next) => {
-//   const { avatar } = req.body;
-//   const { _id: userId } = req.user;
-//   User.findByIdAndUpdate(
-//     userId,
-//     {
-//       avatar,
-//     },
-//     {
-//       new: true,
-//       runValidators: true,
-//       upsert: false,
-//     },
-//   ).orFail(() => {
-//     throw new NotFound('Пользователь с таким id не найден');
-//   })
-//     .then((user) => {
-//       res.status(OK_STATUS).send({ data: user });
-//     })
-//     .catch(next);
-// };
 
 module.exports.updateUserInfo = (req, res, next) => {
   const { name, about } = req.body;
